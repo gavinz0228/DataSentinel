@@ -9,15 +9,16 @@ using MongoDB.Driver;
 using MongoDB.Driver.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using DataSentinel.Infrastructure;
 namespace DataSentinel.DataLayer{
     public class MongoDbDataRepository: IDataRepository
     {
 
         protected object collectionLock = new object();
-        protected IOptions<DatabaseConfig> _options;
+        protected IOptions<AppConfig> _options;
         protected MongoClient _client = null;
         protected Dictionary<string, IMongoCollection<BsonDocument>> _collectionCache = new Dictionary<string, IMongoCollection<BsonDocument>>();
-        public MongoDbDataRepository(IOptions<DatabaseConfig> options){
+        public MongoDbDataRepository(IOptions<AppConfig> options){
             this._options = options;
             _client = new MongoDB.Driver.MongoClient(options.Value.ConnectionString);
         }
