@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -20,24 +21,29 @@ namespace DataSentinel.Controllers
             this._dataRepository = dataRepository;   
         }
 
-        [HttpGet("get/{collection}/{keyColumn}/{value}")]
-        public async Task<ActionResult> Get(string collection, string keyColumn, string value)
+        [HttpGet("get/{collection}/{filter}")]
+        public async Task<ActionResult> Get(string collection, string filter)
         {
-            var result = await this._dataRepository.Get(collection, keyColumn, value);
+            var result = await this._dataRepository.Get(collection, filter);
             return new OkObjectResult(result);
         }
-        [HttpPost("add/{collection}")]
-        public async Task<ActionResult> Add(string collection, [FromBody] string jsonObj)
+        [HttpPut("save/{collection}/{filter}")]
+        public async Task<ActionResult> Save(string collection, string filter, [FromBody] Stream stream)
         {
-            await this._dataRepository.Add(collection, jsonObj);
+            await this._dataRepository.Save(collection, stream, filter);
             return Ok();
         }
-
-        // DELETE api/values/5
-        [HttpDelete("delete/{collection}/{keyColumn}/{value}")]
-        public async Task Delete(string collection, string keyColumn, string value)
+        [HttpPost("add/{collection}")]
+        public async Task<ActionResult> Add(string collection, [FromBody] Stream stream)
         {
-            await this._dataRepository.Delete(collection, keyColumn, value);
+            await this._dataRepository.Add(collection, stream);
+            return Ok();
+        }
+        // DELETE api/values/5
+        [HttpDelete("delete/{collection}/{filter}")]
+        public async Task Delete(string collection, string filter)
+        {
+            await this._dataRepository.Delete(collection, filter);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 namespace DataSentinel.Infrastructure.InputFormaters
 {
     public class JsonStringBodyInputFormatter : InputFormatter
@@ -15,16 +16,13 @@ namespace DataSentinel.Infrastructure.InputFormaters
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context)
         {
             var request = context.HttpContext.Request;
-            using (var reader = new StreamReader(request.Body))
-            {
-                var content = await reader.ReadToEndAsync();
-                return await InputFormatterResult.SuccessAsync(content);
-            }
+            return await InputFormatterResult.SuccessAsync(request.Body);
+
         }
 
         protected override bool CanReadType(Type type)
         {
-            return type == typeof(string);
+            return type == typeof(Stream);
         }
     }
 }
