@@ -20,7 +20,6 @@ namespace DataSentinel.Controllers
             this._userService = userService;
         }
         [HttpPost("login")]
-
         public string Login([FromBody] UserLoginViewModel userLogin)
         {
             string token;
