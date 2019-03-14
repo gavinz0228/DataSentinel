@@ -20,11 +20,16 @@ namespace DataSentinel.Controllers
             this._userService = userService;
         }
         [HttpPost("login")]
-        public string Login([FromBody] UserLoginViewModel userLogin)
+        public ActionResult Login([FromBody] UserLoginViewModel userLogin)
         {
             string token;
-            this._userService.Authenticate(userLogin.UserName, userLogin.Password, out token );
-            return token;
+            bool authenticated = this._userService.Authenticate(userLogin.UserName, userLogin.Password, out token );
+            userLogin.Token =token;
+            userLogin.Password = null;
+            if(authenticated)
+                return new OkObjectResult(userLogin);
+            else
+                return BadRequest();
         }
     }
     

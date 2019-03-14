@@ -34,10 +34,15 @@ namespace DataSentinel
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var authSecretKey =  System.Text.Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("TOKEN_SECRET_KEY"));
+            var authSecretKey =  System.Text.Encoding.UTF8.GetBytes(
+                Environment.GetEnvironmentVariable(Configuration.GetSection("Constants:KEY_TOKEN_SECRET").Value)
+            );
             services.Configure<AppConfig>(options=>{
                 options.ConnectionString = Configuration.GetSection("MongoDb:ConnectionString").Value ;
                 options.DatabaseName = Configuration.GetSection("MongoDb:DatabaseName").Value;
+                options.LoginUserNameKey = Configuration.GetSection("Constants:KEY_LOGIN_USER_NAME").Value;
+                options.LoginPasswordKey = Configuration.GetSection("Constants:KEY_LOGIN_PASSWORD").Value;
+                options.TokenSecretKey = Configuration.GetSection("Constants:KEY_TOKEN_SECRET").Value;
                 options.SecretKey = authSecretKey;
                 _appConfig = options;
             });

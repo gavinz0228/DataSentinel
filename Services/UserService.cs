@@ -19,8 +19,8 @@ namespace DataSentinel.Services{
         public bool Authenticate(string userName, string password, out string token)
         {
             token = null;
-            if(userName == Environment.GetEnvironmentVariable("USER_NAME")
-                &&password == Environment.GetEnvironmentVariable("PASSWORD"))
+            if(userName == Environment.GetEnvironmentVariable(this._appConfig.Value.LoginUserNameKey)
+                &&password == Environment.GetEnvironmentVariable(this._appConfig.Value.LoginPasswordKey))
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var tokenDescriptor = new SecurityTokenDescriptor
