@@ -12986,11 +12986,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Gavin\\Projects\\DataSentinel\\DataSentinel.csproj",
+      "projectUniqueName": "C:\\Users\\Gavin\\Projects\\DataSentinel\\src\\DataSentinel.csproj",
       "projectName": "DataSentinel",
-      "projectPath": "C:\\Users\\Gavin\\Projects\\DataSentinel\\DataSentinel.csproj",
+      "projectPath": "C:\\Users\\Gavin\\Projects\\DataSentinel\\src\\DataSentinel.csproj",
       "packagesPath": "C:\\Users\\Gavin\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Gavin\\Projects\\DataSentinel\\obj\\",
+      "outputPath": "C:\\Users\\Gavin\\Projects\\DataSentinel\\src\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
