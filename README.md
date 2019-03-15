@@ -7,7 +7,8 @@ A generic back end designed for CRUD operations on local database for web scrapi
 
 Set up a MongoDB instance, and create a database and its collections before this api can be used.
 
-Environment Variables:
+**Environment Variables:**
+
 1. JWT Token secret key, default key: TOKEN_SECRET_KEY
 2. Login user name and password, default key: USER_NAME, PASSWORD
 
