@@ -18,7 +18,7 @@ using DataSentinel.DataLayer;
 using DataSentinel.Services;
 using DataSentinel.Infrastructure;
 using DataSentinel.Infrastructure.InputFormaters;
-
+using DataSentinel.Utilities;
 namespace DataSentinel
 {
     public class Startup
@@ -35,14 +35,14 @@ namespace DataSentinel
         public void ConfigureServices(IServiceCollection services)
         {
             var authSecretKey =  System.Text.Encoding.UTF8.GetBytes(
-                Environment.GetEnvironmentVariable(Configuration.GetSection("Constants:KEY_TOKEN_SECRET").Value)
+                Environment.GetEnvironmentVariable(Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET"))
             );
             services.Configure<AppConfig>(options=>{
-                options.ConnectionString = Configuration.GetSection("MongoDb:ConnectionString").Value ;
-                options.DatabaseName = Configuration.GetSection("MongoDb:DatabaseName").Value;
-                options.LoginUserNameKey = Configuration.GetSection("Constants:KEY_LOGIN_USER_NAME").Value;
-                options.LoginPasswordKey = Configuration.GetSection("Constants:KEY_LOGIN_PASSWORD").Value;
-                options.TokenSecretKey = Configuration.GetSection("Constants:KEY_TOKEN_SECRET").Value;
+                options.ConnectionString = Configuration.GetSectionAsString("MongoDb:ConnectionString") ;
+                options.DatabaseName = Configuration.GetSectionAsString("MongoDb:DatabaseName");
+                options.LoginUserNameKey = Configuration.GetSectionAsString("Constants:KEY_LOGIN_USER_NAME");
+                options.LoginPasswordKey = Configuration.GetSectionAsString("Constants:KEY_LOGIN_PASSWORD");
+                options.TokenSecretKey = Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET");
                 options.SecretKey = authSecretKey;
                 _appConfig = options;
             });

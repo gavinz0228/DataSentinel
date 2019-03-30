@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using DataSentinel.Infrastructure;
+using DataSentinel.Utilities;
 namespace DataSentinel.Services{
     public class UserService : IUserService
     {
@@ -19,8 +20,8 @@ namespace DataSentinel.Services{
         public bool Authenticate(string userName, string password, out string token)
         {
             token = null;
-            if(userName == Environment.GetEnvironmentVariable(this._appConfig.Value.LoginUserNameKey)
-                &&password == Environment.GetEnvironmentVariable(this._appConfig.Value.LoginPasswordKey))
+            if(userName == SystemUtility.GetEnvironmentVariableAsString(this._appConfig.Value.LoginUserNameKey)
+                &&password == SystemUtility.GetEnvironmentVariableAsString(this._appConfig.Value.LoginPasswordKey))
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var tokenDescriptor = new SecurityTokenDescriptor
