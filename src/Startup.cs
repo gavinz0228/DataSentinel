@@ -35,7 +35,7 @@ namespace DataSentinel
         public void ConfigureServices(IServiceCollection services)
         {
             var authSecretKey =  System.Text.Encoding.UTF8.GetBytes(
-                Environment.GetEnvironmentVariable(Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET"))
+                SystemUtility.GetEnvironmentVariableAsString(Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET"))
             );
             services.Configure<AppConfig>(options=>{
                 options.ConnectionString = Configuration.GetSectionAsString("MongoDb:ConnectionString") ;
