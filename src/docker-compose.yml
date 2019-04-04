@@ -2,10 +2,10 @@ version: '3.5'
 
 services:
   backend:
-	image: datasentinel
-	ports:
-  	- "80:80"
-	environment:
-  	- TOKEN_SECRET_KEY="Yourtokensecretkey"
-  	- USER_NAME="thisisyourusername"
-  	- PASSWORD="thisisyourpassword"
+  image: datasentinel
+  ports:
+    - "80:80"
+  environment:
+    - BACKEND_TOKEN_SECRET_KEY=Yourtokensecretkey
+    - BACKEND_USER_NAME=thisisyourusername
+    - BACKEND_PASSWORD=thisisyourpassword
