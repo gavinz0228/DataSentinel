@@ -9,3 +9,4 @@ services:
     - BACKEND_TOKEN_SECRET_KEY=Yourtokensecretkey
     - BACKEND_USER_NAME=thisisyourusername
     - BACKEND_PASSWORD=thisisyourpassword
+    - KEY_DB_CONNECTION=mongodb://127.0.0.1:27017

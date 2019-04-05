@@ -38,8 +38,8 @@ namespace DataSentinel
                 SystemUtility.GetEnvironmentVariableAsString(Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET"))
             );
             services.Configure<AppConfig>(options=>{
-                options.ConnectionString = Configuration.GetSectionAsString("MongoDb:ConnectionString") ;
-                options.DatabaseName = Configuration.GetSectionAsString("MongoDb:DatabaseName");
+                options.ConnectionString = SystemUtility.GetEnvironmentVariableAsString(Configuration.GetSectionAsString("Constants:KEY_DB_CONNECTION")) ;
+                options.DatabaseName = SystemUtility.GetEnvironmentVariableAsString(Configuration.GetSectionAsString("Constants:KEY_DB_NAME"));
                 options.LoginUserNameKey = Configuration.GetSectionAsString("Constants:KEY_LOGIN_USER_NAME");
                 options.LoginPasswordKey = Configuration.GetSectionAsString("Constants:KEY_LOGIN_PASSWORD");
                 options.TokenSecretKey = Configuration.GetSectionAsString("Constants:KEY_TOKEN_SECRET");
