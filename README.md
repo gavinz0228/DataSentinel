@@ -9,8 +9,9 @@ Set up a MongoDB instance, and create a database and its collections before this
 
 **Environment Variables:**
 
-1. JWT Token secret key, default key: TOKEN_SECRET_KEY
-2. Login user name and password, default key: USER_NAME, PASSWORD
+1. JWT Token secret key, default key: BACKEND_TOKEN_SECRET_KEY
+2. Login user name and password, default key: BACKEND_USER_NAME, BACKEND_PASSWORD
+3. MongoDB connection string and database name: BACKEND_DB_CONNECTION, BACKEND_DB_NAME
 
 (These Environment variable keys can be changed in the appsettings.json under section Constants.)
 
