@@ -16,7 +16,8 @@ namespace DataSentinel.Controllers
         [HttpGet("/")]
         public ActionResult Index()
         {
-            return new OkObjectResult("My services are up and running.");
+            string html = $"<html><body>My services are up and running. <a href='connection/bygavin.com'>Check other server connection</a></body></html>";
+            return new ContentResult(){Content = html, ContentType = "text/html"};
         }
     }
 }
