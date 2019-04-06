@@ -18,6 +18,7 @@ using DataSentinel.DataLayer;
 using DataSentinel.Services;
 using DataSentinel.Infrastructure;
 using DataSentinel.Infrastructure.InputFormaters;
+using DataSentinel.Infrastructure.Middlewares;
 using DataSentinel.Utilities;
 namespace DataSentinel
 {
@@ -71,7 +72,7 @@ namespace DataSentinel
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -81,8 +82,10 @@ namespace DataSentinel
             {
                 app.UseHsts();
             }
+            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             app.UseHttpsRedirection();
             app.UseAuthentication();
+            app.UseMiddleware(typeof(ErrorHandlingMiddleware));
             app.UseMvc();
 
         }
