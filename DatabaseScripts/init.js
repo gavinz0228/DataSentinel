@@ -1,4 +1,4 @@
-
+use api
 var settingdb = db.getSiblingDB('api');
 var collection = settingdb.getCollection('setting');
 if(collection.count() > 0){
@@ -7,12 +7,18 @@ if(collection.count() > 0){
 else{
     collection.insert({"wrong_password_try_allowed": 5, })
 }
-function getSettings(){
+var getSettings = function (){
     var settingdb = db.getSiblingDB('api');
     var collection = settingdb.getCollection('setting');
     return collection.findOne({})
 }
-function isIPBlocked(ip){
+db.system.js.save(
+   {
+     _id: "getSettings",
+     value : getSettings
+   }
+)
+var isIPBlocked = function (ip){
     var collection = db.getSiblingDB('api').getCollection('blacklist');
     var record = collection.findOne({ip:ip, status: "active"});
     if(record)
@@ -20,7 +26,14 @@ function isIPBlocked(ip){
     else
         return false;
 }
-function log_wrong_password(ip){
+db.system.js.save(
+   {
+     _id: "isIPBlocked",
+     value : isIPBlocked
+   }
+)
+
+var log_wrong_password = function (ip){
     var collection = db.getSiblingDB('api').getCollection('blacklist');
     var record = collection.findOne({ip:ip, status:{$ne:"remove"}});
     if(record){
@@ -48,5 +61,9 @@ function log_wrong_password(ip){
         collection.insert({ip:ip, try: 1, status: "inactive" })
     }
 }
-    
-//log_wrong_password("1.1.1.1");
+db.system.js.save(
+   {
+     _id: "log_wrong_password",
+     value : log_wrong_password
+   }
+)
