@@ -1,3 +1,4 @@
+
 var settingdb = db.getSiblingDB('api');
 var collection = settingdb.getCollection('setting');
 if(collection.count() > 0){
@@ -9,21 +10,27 @@ else{
 function getSettings(){
     var settingdb = db.getSiblingDB('api');
     var collection = settingdb.getCollection('setting');
-    return collection.find({})._query
+    return collection.findOne({})
+}
+function isIPBlocked(ip){
+    var collection = db.getSiblingDB('api').getCollection('blacklist');
+    var record = collection.findOne({ip:ip, status: "active"});
+    if(record)
+        return true;
+    else
+        return false;
 }
 function log_wrong_password(ip){
     var collection = db.getSiblingDB('api').getCollection('blacklist');
     var record = collection.findOne({ip:ip, status:{$ne:"remove"}});
     if(record){
-        print(record);
         if(record.status == "active")
         {
             //it's already active in the black list
         }
         else if(record.status == "inactive"){
             var settings = getSettings();
-            print(settings)
-            if(record.try >= settings.wrong_password_try_allowed ){
+            if(record.try < settings.wrong_password_allowed ){
                 //increase try Number
                 record.try = record.try + 1;
                 collection.update({ip:ip,status: "inactive"}, record)
@@ -32,14 +39,14 @@ function log_wrong_password(ip){
                 //make the black list item active
                 record.status = "active"
                 collection.update({ip:ip,status: "inactive"}, record)
-            }  
+            }
+                
     }
+
 }
     else{
         collection.insert({ip:ip, try: 1, status: "inactive" })
     }
 }
     
-    
-
-log_wrong_password("1.1.1.1");
+//log_wrong_password("1.1.1.1");
