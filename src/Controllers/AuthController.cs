@@ -20,13 +20,11 @@ namespace DataSentinel.Controllers
             this._userService = userService;
         }
         [HttpPost("login")]
-        public ActionResult Login([FromBody] UserLoginViewModel userLogin)
+        public async Task<ActionResult> Login([FromBody] UserLoginViewModel userLogin)
         {
-            string token;
-            bool authenticated = this._userService.Authenticate(userLogin.UserName, userLogin.Password, out token );
-            userLogin.Token =token;
+            userLogin.Token = await this._userService.Authenticate(userLogin.UserName, userLogin.Password );
             userLogin.Password = null;
-            if(authenticated)
+            if(userLogin.Token != null)
                 return new OkObjectResult(userLogin);
             else
                 return BadRequest();

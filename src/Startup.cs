@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using DataSentinel.DataLayer;
 using DataSentinel.Services;
 using DataSentinel.Infrastructure;
@@ -69,6 +71,8 @@ namespace DataSentinel
 
             services.AddScoped<IDataRepository, MongoDbDataRepository>();
             services.AddScoped<IUserService, UserService>();
+            services.AddHttpContextAccessor();
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,7 +1,8 @@
 using System;
+using System.Threading.Tasks;
 namespace DataSentinel.Services{
     public interface IUserService
     {
-        bool Authenticate(string userName, string password, out string token);
+        Task<string> Authenticate(string userName, string password);
     }
 }

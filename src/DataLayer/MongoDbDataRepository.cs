@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
@@ -9,19 +11,27 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using MongoDB.Driver.Core;
+using MongoDB.Driver.Core.Operations;
+using MongoDB.Driver.Core.Bindings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using DataSentinel.Infrastructure;
 namespace DataSentinel.DataLayer{
     public class MongoDbDataRepository: IDataRepository
     {
+        protected const string API_DATABASE_NAME = "api";
+        protected const string FUNCTION_IS_IP_BLACKLISTED = "isIPBlacklisted";
+        protected const string FUNCTION_LOG_WRONG_PASSWORD = "logWrongPassword";
         protected object collectionLock = new object();
         protected IOptions<AppConfig> _options;
         protected MongoClient _client = null;
+        protected IMongoDatabase _apiDatabase;
         protected Dictionary<string, IMongoCollection<BsonDocument>> _collectionCache = new Dictionary<string, IMongoCollection<BsonDocument>>();
+        protected HashSet<string> _reservedCollections = new HashSet<string>(new string[] {"settings", "blacklist"}, StringComparer.InvariantCultureIgnoreCase);
         public MongoDbDataRepository(IOptions<AppConfig> options){
             this._options = options;
             _client = new MongoDB.Driver.MongoClient(options.Value.ConnectionString);
+            _apiDatabase = _client.GetDatabase(API_DATABASE_NAME);
         }
         public async Task Add(string collection, Stream stream){
             await GetCollection(collection).InsertOneAsync(await ReadStreamToBsonDocument(stream));
@@ -46,10 +56,13 @@ namespace DataSentinel.DataLayer{
                 lock(collectionLock)
                 {
                     if(!_collectionCache.ContainsKey(collection)){
-                        _collectionCache.Add(
-                            collection,
-                             _client.GetDatabase(_options.Value.DatabaseName).GetCollection<BsonDocument>(collection)
-                        );
+                        if(!_reservedCollections.Contains(collection))
+                            _collectionCache.Add(
+                                collection,
+                                _client.GetDatabase(_options.Value.DatabaseName).GetCollection<BsonDocument>(collection)
+                            );
+                        else
+                            throw new Exception($"Reserved collection name {collection} is not allowed to access.");
                     }
                 }
             }
@@ -61,6 +74,30 @@ namespace DataSentinel.DataLayer{
             {
                 return BsonDocument.Parse(await streamReader.ReadToEndAsync());
             }
+        }
+        protected async Task<BsonValue> EvalAsync( string javascript)
+        {
+            var function = new BsonJavaScript(javascript);
+            var op = new EvalOperation(this._apiDatabase.DatabaseNamespace, function, null);
+
+            using (var writeBinding = new WritableServerBinding(this._client.Cluster, new CoreSessionHandle(NoCoreSession.Instance)))
+            {
+                return await op.ExecuteAsync(writeBinding, CancellationToken.None);
+            }
+        }
+        protected async Task<BsonValue> EvalFunctionAsync(string functionName, string [] parameters)
+        {
+            var script =functionName + "("+ string.Join(',', parameters.Select(e=> $"'{e}'" )) +")";
+            return await this.EvalAsync(script);
+
+        }
+        public async Task<bool> IsBlacklisted(string ip){
+            var result = await this.EvalFunctionAsync(FUNCTION_IS_IP_BLACKLISTED, new string[]{ip});
+            return result != null;
+        }
+        public async Task LogWrongPassword(string ip)
+        {
+            await this.EvalFunctionAsync(FUNCTION_LOG_WRONG_PASSWORD, new string[]{ip});
         }
     }
 }

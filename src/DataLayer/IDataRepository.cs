@@ -9,5 +9,7 @@ namespace DataSentinel.DataLayer{
         Task Save( string table,  Stream stream, string filter);
         Task<long> Delete( string table, string filter);
         Task<IList<Object>> Get(string table, string filter);
+        Task<bool> IsBlacklisted(string ip);
+        Task LogWrongPassword(string ip);
     }
 }
