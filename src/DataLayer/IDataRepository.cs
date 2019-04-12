@@ -11,5 +11,6 @@ namespace DataSentinel.DataLayer{
         Task<IList<Object>> Get(string table, string filter);
         Task<bool> IsBlacklisted(string ip);
         Task LogWrongPassword(string ip);
+        Task RemoveWrongPassword(string ip);
     }
 }

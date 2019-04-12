@@ -19,19 +19,19 @@ using DataSentinel.Infrastructure;
 namespace DataSentinel.DataLayer{
     public class MongoDbDataRepository: IDataRepository
     {
-        protected const string API_DATABASE_NAME = "api";
         protected const string FUNCTION_IS_IP_BLACKLISTED = "isIPBlacklisted";
         protected const string FUNCTION_LOG_WRONG_PASSWORD = "logWrongPassword";
+        protected const string FUNCTION_REMOVE_WRONG_PASSWORD = "removeWrongPassword";
         protected object collectionLock = new object();
         protected IOptions<AppConfig> _options;
         protected MongoClient _client = null;
-        protected IMongoDatabase _apiDatabase;
+        protected IMongoDatabase _database;
         protected Dictionary<string, IMongoCollection<BsonDocument>> _collectionCache = new Dictionary<string, IMongoCollection<BsonDocument>>();
         protected HashSet<string> _reservedCollections = new HashSet<string>(new string[] {"settings", "blacklist"}, StringComparer.InvariantCultureIgnoreCase);
         public MongoDbDataRepository(IOptions<AppConfig> options){
             this._options = options;
             _client = new MongoDB.Driver.MongoClient(options.Value.ConnectionString);
-            _apiDatabase = _client.GetDatabase(API_DATABASE_NAME);
+            _database = _client.GetDatabase(_options.Value.DatabaseName);
         }
         public async Task Add(string collection, Stream stream){
             await GetCollection(collection).InsertOneAsync(await ReadStreamToBsonDocument(stream));
@@ -78,7 +78,7 @@ namespace DataSentinel.DataLayer{
         protected async Task<BsonValue> EvalAsync( string javascript)
         {
             var function = new BsonJavaScript(javascript);
-            var op = new EvalOperation(this._apiDatabase.DatabaseNamespace, function, null);
+            var op = new EvalOperation(this._database.DatabaseNamespace, function, null);
 
             using (var writeBinding = new WritableServerBinding(this._client.Cluster, new CoreSessionHandle(NoCoreSession.Instance)))
             {
@@ -93,11 +93,15 @@ namespace DataSentinel.DataLayer{
         }
         public async Task<bool> IsBlacklisted(string ip){
             var result = await this.EvalFunctionAsync(FUNCTION_IS_IP_BLACKLISTED, new string[]{ip});
-            return result != null;
+            return result.AsBoolean;
         }
         public async Task LogWrongPassword(string ip)
         {
             await this.EvalFunctionAsync(FUNCTION_LOG_WRONG_PASSWORD, new string[]{ip});
+        }
+        public async Task RemoveWrongPassword(string ip)
+        {
+            await this.EvalFunctionAsync(FUNCTION_REMOVE_WRONG_PASSWORD, new string[]{ip});
         }
     }
 }

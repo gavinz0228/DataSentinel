@@ -32,6 +32,7 @@ namespace DataSentinel.Services{
             if(userName == SystemUtility.GetEnvironmentVariableAsString(this._appConfig.Value.LoginUserNameKey)
                 &&password == SystemUtility.GetEnvironmentVariableAsString(this._appConfig.Value.LoginPasswordKey))
             {
+                await this._repository.RemoveWrongPassword(clientIp);
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
@@ -45,6 +46,7 @@ namespace DataSentinel.Services{
                 };
                 var securityToken = tokenHandler.CreateToken(tokenDescriptor);
                 string token = tokenHandler.WriteToken(securityToken);
+                
                 return token;
             }
             await this._repository.LogWrongPassword(clientIp);
