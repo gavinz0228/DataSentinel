@@ -50,7 +50,7 @@ namespace DataSentinel.Services{
                 return token;
             }
             await this._repository.LogWrongPassword(clientIp);
-            return null;
+            throw new Exception("User name or password is wrong!");
         }
 
     }

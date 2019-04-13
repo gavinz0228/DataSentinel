@@ -16,22 +16,28 @@ using MongoDB.Driver.Core.Bindings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using DataSentinel.Infrastructure;
+using DataSentinel.DataLayer.Models;
 namespace DataSentinel.DataLayer{
     public class MongoDbDataRepository: IDataRepository
     {
-        protected const string FUNCTION_IS_IP_BLACKLISTED = "isIPBlacklisted";
-        protected const string FUNCTION_LOG_WRONG_PASSWORD = "logWrongPassword";
-        protected const string FUNCTION_REMOVE_WRONG_PASSWORD = "removeWrongPassword";
+        protected const string COLLECTION_SETTING = "setting";
+        protected const string COLLECTION_BLACKLIST = "blacklist";
+        protected IMongoCollection<Setting> _settingCollection;
+        protected IMongoCollection<Blacklist> _blacklistCollection;
         protected object collectionLock = new object();
         protected IOptions<AppConfig> _options;
         protected MongoClient _client = null;
-        protected IMongoDatabase _database;
+        protected IMongoDatabase _database = null;
+        protected Setting _setting = null;
         protected Dictionary<string, IMongoCollection<BsonDocument>> _collectionCache = new Dictionary<string, IMongoCollection<BsonDocument>>();
-        protected HashSet<string> _reservedCollections = new HashSet<string>(new string[] {"settings", "blacklist"}, StringComparer.InvariantCultureIgnoreCase);
+        protected HashSet<string> _reservedCollections = new HashSet<string>(new string[] {COLLECTION_SETTING, COLLECTION_BLACKLIST}, StringComparer.InvariantCultureIgnoreCase);
         public MongoDbDataRepository(IOptions<AppConfig> options){
             this._options = options;
-            _client = new MongoDB.Driver.MongoClient(options.Value.ConnectionString);
-            _database = _client.GetDatabase(_options.Value.DatabaseName);
+            this._client = new MongoDB.Driver.MongoClient(options.Value.ConnectionString);
+            this._database = _client.GetDatabase(_options.Value.DatabaseName);            
+            this._blacklistCollection = this._database.GetCollection<Blacklist>(COLLECTION_BLACKLIST);
+            this._settingCollection = this._database.GetCollection<Setting>(COLLECTION_SETTING);
+
         }
         public async Task Add(string collection, Stream stream){
             await GetCollection(collection).InsertOneAsync(await ReadStreamToBsonDocument(stream));
@@ -92,16 +98,44 @@ namespace DataSentinel.DataLayer{
 
         }
         public async Task<bool> IsBlacklisted(string ip){
-            var result = await this.EvalFunctionAsync(FUNCTION_IS_IP_BLACKLISTED, new string[]{ip});
-            return result.AsBoolean;
+            var cursor = await this._blacklistCollection.FindAsync(b => b.IPAddress == ip && b.Status == BlacklistStatus.Active);
+            var item = await cursor.SingleOrDefaultAsync();
+            return item != null;
         }
         public async Task LogWrongPassword(string ip)
         {
-            await this.EvalFunctionAsync(FUNCTION_LOG_WRONG_PASSWORD, new string[]{ip});
+            if(this._setting==null)
+            {
+                var settingCur = await this._settingCollection.FindAsync(_ => true);
+                this._setting = await settingCur.SingleOrDefaultAsync();
+            }
+            var cursor = await _blacklistCollection.FindAsync(b => b.IPAddress == ip && b.Status == BlacklistStatus.Inactive);
+            var existing = await cursor.SingleOrDefaultAsync();
+            if(existing==null){
+                await this._blacklistCollection.InsertOneAsync(new Blacklist(){IPAddress = ip, Status= BlacklistStatus.Inactive, WrongPasswordTry = 1, LastTryTime = DateTime.Now });
+            }
+            else{
+                if(existing.WrongPasswordTry < this._setting.WrongPasswordLimit){
+                    var update = Builders<Blacklist>.Update.Set(s => s.WrongPasswordTry, existing.WrongPasswordTry + 1)
+                        .Set(s => s.LastTryTime, DateTime.Now);
+                    await this._blacklistCollection.UpdateOneAsync(b => b.Id == existing.Id, update);
+                }
+                else{
+                    var update = Builders<Blacklist>.Update.Set(s => s.Status, BlacklistStatus.Active)
+                        .Set(s => s.LastTryTime, DateTime.Now);
+                    await this._blacklistCollection.UpdateOneAsync(b => b.Id == existing.Id, update);
+                }
+            }
         }
         public async Task RemoveWrongPassword(string ip)
         {
-            await this.EvalFunctionAsync(FUNCTION_REMOVE_WRONG_PASSWORD, new string[]{ip});
+            var cursor = await _blacklistCollection.FindAsync(b => b.IPAddress == ip && b.Status == BlacklistStatus.Inactive);
+            var existing = await cursor.SingleOrDefaultAsync();
+            if(existing!=null){
+                var update = Builders<Blacklist>.Update.Set(s => s.WrongPasswordTry, 0)
+                    .Set(s => s.LastTryTime, DateTime.Now);
+                await this._blacklistCollection.UpdateOneAsync(b => b.Id == existing.Id, update);
+            }
         }
     }
 }
